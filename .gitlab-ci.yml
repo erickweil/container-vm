@@ -22,14 +22,16 @@ debug:
   variables:
     BUILD_TAG: $IMG_BASE:code
   script:
-    - ls -lhas
+    - ls -lhas . ./docker-vm
     - echo "Nome da imagem"
     - echo $IMG_BASE
     - echo "Default branch:"
     - echo $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - echo "Testando questão do docker artifact"
-    - docker pull ubuntu || true
-    - ls -lhas /var/lib/docker
+    - docker images
+    - docker system df
+    #- docker pull ubuntu || true
+    #- ls -lhas /var/lib/docker
 
 .mybuild-docker:
   image: docker:dind
@@ -71,6 +73,8 @@ build-code:
     BUILD_DIR: "./docker-vm"
     BUILD_TAG: $IMG_BASE:code
     BUILD_DOCKERFILE: Dockerfile
+  after_script:
+    - docker tag $BUILD_TAG container-vm:code # Para funcionar o próximo estágio
 
 build-complete:
   extends: 
@@ -81,9 +85,8 @@ build-complete:
   variables:
     BUILD_DIR: "./docker-vm"
     BUILD_TAG: $IMG_BASE:complete
-    BUILD_DOCKERFILE: Dockerfile.layer
+    BUILD_DOCKERFILE: Dockerfile.complete
 
-# Quando abrir um merge request
 test:
   image: docker:dind
   extends: .on-commit-main
@@ -95,6 +98,7 @@ test:
     - apk update
     - apk add bash
     - apk add curl
+    - apk add gettext libintl # para funcionar envsubst
   script:
     - echo "Vendo se o container inicia"
     - cd ./docker-vm
@@ -107,5 +111,9 @@ test:
     - docker exec joao bash -c "systemctl status --no-pager"
     - curl -fsSL http://localhost:8080
     - docker rm -f joao
+
 # Depois
+
+# Usar cypress para entrar pela UI e instalar as extensões do vscode, deixar modo escuro, etc... de forma automática
+
 # https://medium.com/@hfally/a-gitlab-ci-config-to-deploy-to-your-server-via-ssh-43bf3cf93775
