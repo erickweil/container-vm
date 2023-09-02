@@ -30,7 +30,7 @@ debug:
     - docker pull ubuntu || true
     - ls -lhas /var/lib/docker
 
-mybuild-docker:
+.mybuild-docker:
   image: docker:dind
   variables:
     BUILD_DIR: "."
