@@ -73,8 +73,8 @@ build-code:
     BUILD_DIR: "./docker-vm"
     BUILD_TAG: $IMG_BASE:code
     BUILD_DOCKERFILE: Dockerfile
-  after_script:
-    - docker tag $BUILD_TAG container-vm:code # Para funcionar o próximo estágio
+#  after_script:
+#    - docker tag $BUILD_TAG container-vm:code # Para funcionar o próximo estágio
 
 build-complete:
   extends: 
