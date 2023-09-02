@@ -1,23 +1,28 @@
-# Docker VM
+# Docker Container VM
 
 Criar containers docker que funcionam quase idêntico à uma máquina virtual. Com capacidade de executar outros containers docker e programas, apenas dentro do container sem afetar o host.
 
 # Utilização Rápida
 
-## Criar um novo container para um aluno:
-Considerando que ao montar um volume docker o mesmo inicia-se vazio, o processo de iniciar o container de um aluno consiste em:
+**Primeira vez**:
+- Instalar o [Sysbox](https://github.com/nestybox/sysbox) (Alternativa é utilizar --privileged para subir os containers, mas com algumas dezenas de containers iria dar erro por 'estarem arquivos demais abertos' Veja [#1](https://oooops.dev/2021/01/17/file-limits-and-how-the-too-many-open-files-error-can-pop-up-unexpectedly/) [#2](https://serverfault.com/questions/1053187/systemd-fails-to-run-in-a-docker-container-when-using-cgroupv2-cgroupns-priva) )
+- (Opcional) editar o docker-compose.yml para controlar a limitação de cpu e memória, bem como configurar outras variáveis de ambiente, portas, volumes, etc...
+- Criar a rede docker que os containers irão fazer parte `docker network create nome-da-rede`
+- Editar o arquivo .env.template e colocar ali a imagem docker e o nome da rede docker criada.
 
-1. (Primeira vez) Criar a rede que os containers irão fazer parte
-2. Criar o volume do container
-3. Iniciar o novo container com o `docker run`, utilizando o container runtime Sysbox, com rede, volume, e portas mapeados corretamente
-4. Executar o script de criação do usuário com `docker exec`
+**Para cada container**:
+Executar o script novo_container.sh recebendo o usuário, senha, porta do code server e porta do ssh.
 
-O script novo_container.sh faz esse procedimento, recebendo o usuário, senha, porta do code server e porta do ssh:
+Por exemplo:
 ```bash
-bash ./novo_container.sh usuario senha 8080 22
+bash ./novo_container.sh joao 12345678 8080 22
 ```
+- Usuário: 'joao'
+- Senha: '12345678'
+- Porta do Code-Server: 8080
+- Porta SSH: 22
 
-## Como funciona:
+# Como funciona:
 
 Objetivos:
 - Prover a experiência de uma máquina virtual para cada aluno.
@@ -39,9 +44,11 @@ A imagem Docker Base, com usuário admin:admin está publicada no DockerHub [con
 
 A imagem basicamente constrói um ambiente que imita uma máquina virtual, contendo vários utilitários de linha de comando (nano, ping, nslookup, curl, wget, etc...), systemd para gerenciar os serviços, um servidor ssh, instalação code-server via script, e programas que são comumentes utilizados no desenvolvimento (docker, git, node, python3).
 
-## Sysbox
+## [Sysbox](https://github.com/nestybox/sysbox)
 
-Para subir um container docker dentro do docker, é necessário executá-lo com a flag `--privileged`, o que abre uma série de [brechas de segurança](https://www.trendmicro.com/pt_br/research/19/l/why-running-a-privileged-container-in-docker-is-a-bad-idea.html), portanto seguindo algumas recomendações desta postagem de um blog que os próprios desenvolvedores do docker:dind sugerem ( https://github.com/jpetazzo/dind -> http://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/ ) chega-se à solução [Sysbox](http://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/).
+Para subir um container docker dentro do docker, é necessário executá-lo com a flag `--privileged`, o que abre uma série de [brechas de segurança](https://www.trendmicro.com/pt_br/research/19/l/why-running-a-privileged-container-in-docker-is-a-bad-idea.html), portanto seguindo algumas recomendações desta postagem de um blog que os próprios desenvolvedores do docker:dind sugerem ( https://github.com/jpetazzo/dind -> http://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/ ) chega-se à solução [Sysbox](https://github.com/nestybox/sysbox) 
+
+[Veja uma explicação sobre docker-in-docker para entender melhor porque usar Sysbox](http://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/).
 
 O Sysbox é um **container runtime** open-source e gratuito que melhora containers por prover maior isolamento e permitindo executar softwares à nível de sistema (Como docker) sem a necessidade da flag `--privileged`, eliminando então parte dos problemas de segurança e garantindo maior simplicidade no processo como um todo.
 

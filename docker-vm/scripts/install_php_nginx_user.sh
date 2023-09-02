@@ -7,7 +7,13 @@ if [ ! -d "/etc/nginx" ]; then
 	exit 0
 fi
 
-export NGINXROOT=${DEFAULT_NGINXROOT:-"$WORKSPACE/public_html"}
+# Se tem Workspace, usa ele, senão usa o padrão do nginx
+if [ ! -z "$WORKSPACE" ]; then
+	export NGINXROOT=${DEFAULT_NGINXROOT:-"$WORKSPACE/public_html"}
+else
+	export NGINXROOT=${DEFAULT_NGINXROOT:-"/var/www/html"}
+fi
+
 envsubst '${NGINXROOT}' < "php-nginx-default.conf" > "/etc/nginx/sites-available/default"
 
 # cria um index.html padrão se for a primeira vez

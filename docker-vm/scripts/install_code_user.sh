@@ -61,20 +61,22 @@ if [ ! -f "$INSTALL_HOME/.config/code-server/config.yaml" ]; then
 	envsubst < "config.yaml" > "$INSTALL_HOME/.config/code-server/config.yaml"
 fi
 
-echo "Comfigurando Serviço do Code-Server"
 # Configurar o serviço do code-server para abrir o Workspace padrão
-mkdir -p $WORKSPACE || true
+if [ ! -z "$WORKSPACE" ]; then
+	echo "Configurando Worskpace do Code-Server"
+	mkdir -p $WORKSPACE || true
 
-{ echo "[Service]"; 
-	echo "ExecStart=";
-	echo "ExecStart=/usr/bin/code-server $WORKSPACE";
-} > ~/override.conf
-# Não funciona em TTY, Tem que copiar para o caminho msm
-#env SYSTEMD_EDITOR="cp $HOME/override.conf" systemctl edit code-server@$USERNAME
-mkdir "/etc/systemd/system/code-server@.service.d" || true
-cp ~/override.conf "/etc/systemd/system/code-server@.service.d/override.conf"
+	{ echo "[Service]"; 
+		echo "ExecStart=";
+		echo "ExecStart=/usr/bin/code-server $WORKSPACE";
+	} > ~/override.conf
+	# Não funciona em TTY, Tem que copiar para o caminho msm
+	#env SYSTEMD_EDITOR="cp $HOME/override.conf" systemctl edit code-server@$USERNAME
+	mkdir "/etc/systemd/system/code-server@.service.d" || true
+	cp ~/override.conf "/etc/systemd/system/code-server@.service.d/override.conf"
 
-systemctl daemon-reload || true
+	systemctl daemon-reload || true
+fi
 
 # Iniciar code-server
 systemctl enable --now code-server@$USERNAME || true

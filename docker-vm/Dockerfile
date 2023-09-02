@@ -24,6 +24,12 @@ EXPOSE 8080
 
 WORKDIR /root
 
+
+# Para escolher o Timezone que o container irá usar
+# ENV TZ=America/New_York
+# Para escolher o Locale que será instalado
+# ENV LANG=pt_BR.UTF-8
+
 ENV INSTALL_USER=admin
 ENV INSTALL_HOME=/home/admin
 # VER DEPOIS: Configurar que programas instalar ou não via alguma variável de ambiente
