@@ -8,7 +8,8 @@ variables:
 
 stages:
   - debug
-  - publish
+  - publish1
+  - publish2
   - test
 
 debug:
@@ -65,7 +66,7 @@ build-code:
     - .on-commit-main
     - .mybuild-docker
   needs: ["debug"]
-  stage: publish
+  stage: publish1
   variables:
     BUILD_DIR: "./docker-vm"
     BUILD_TAG: $IMG_BASE:code
@@ -76,7 +77,7 @@ build-complete:
     - .on-commit-main
     - .mybuild-docker
   needs: ["build-code"]
-  stage: publish
+  stage: publish2
   variables:
     BUILD_DIR: "./docker-vm"
     BUILD_TAG: $IMG_BASE:complete
