@@ -1,0 +1,110 @@
+#include: '/templates/padrao.template.yml'
+include: 'https://gitlab.fslab.dev/fslab/modelo-ci-cd/-/raw/master/templates/padrao.template.yml'
+
+variables:
+  IMG_BASE: registry.fslab.dev/erickweil/container-vm
+  # https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#make-docker-in-docker-builds-faster-with-docker-layer-caching
+  DOCKER_DRIVER: overlay2
+
+stages:
+  - debug
+  - publish
+  - test
+
+debug:
+  image: docker:dind
+  extends: 
+    - .on-commit-main
+  # - .disable-git-clone
+  needs: []
+  stage: debug
+  variables:
+    BUILD_TAG: $IMG_BASE:code
+  script:
+    - ls -lhas
+    - echo "Nome da imagem"
+    - echo $IMG_BASE
+    - echo "Default branch:"
+    - echo $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - echo "Testando questão do docker artifact"
+    - docker pull ubuntu || true
+    - ls -lhas /var/lib/docker
+
+mybuild-docker:
+  image: docker:dind
+  variables:
+    BUILD_DIR: "."
+    BUILD_DOCKERFILE: "Dockerfile"
+    BUILD_TAG: $CI_REGISTRY/$GITLAB_USER_LOGIN/$CI_PROJECT_NAME:latest
+  script:
+    - cd $BUILD_DIR
+    - echo "Realizando o build da imagem $BUILD_TAG no diretório $BUILD_DIR"
+
+    # fetches the latest image (not failing if image is not found)
+    - docker pull $BUILD_TAG || true
+    # builds the project, passing proxy variables, using OCI labels
+    # notice the cache-from, which is going to use the image we just pulled locally
+    # the built image is tagged locally with the commit SHA, and then pushed to 
+    # the GitLab registry
+    - >
+      docker build
+      --pull
+      --cache-from $BUILD_TAG
+      --label "org.opencontainers.image.title=$CI_PROJECT_TITLE"
+      --label "org.opencontainers.image.url=$CI_PROJECT_URL"
+      --label "org.opencontainers.image.created=$CI_JOB_STARTED_AT"
+      --label "org.opencontainers.image.revision=$CI_COMMIT_SHA"
+      --label "org.opencontainers.image.version=$CI_COMMIT_REF_NAME"
+      --tag $BUILD_TAG
+      -f $BUILD_DOCKERFILE
+      .
+    - docker push "$BUILD_TAG"
+
+build-code:
+  extends: 
+    - .on-commit-main
+    - .mybuild-docker
+  needs: ["debug"]
+  stage: publish
+  variables:
+    BUILD_DIR: "./docker-vm"
+    BUILD_TAG: $IMG_BASE:code
+    BUILD_DOCKERFILE: Dockerfile
+
+build-complete:
+  extends: 
+    - .on-commit-main
+    - .mybuild-docker
+  needs: ["build-code"]
+  stage: publish
+  variables:
+    BUILD_DIR: "./docker-vm"
+    BUILD_TAG: $IMG_BASE:complete
+    BUILD_DOCKERFILE: Dockerfile.layer
+
+# Quando abrir um merge request
+test:
+  image: docker:dind
+  extends: .on-commit-main
+  needs: ["build-complete"]
+  stage: test
+  variables:
+    BUILD_TAG: $IMG_BASE:complete
+  before_script:
+    - apk update
+    - apk add bash
+    - apk add curl
+  script:
+    - echo "Vendo se o container inicia"
+    - cd ./docker-vm
+    - bash ./novo_container.sh joao 12345678 8080 22
+    - sleep 10
+    - docker ps -a
+    - docker logs joao
+    - docker exec joao bash -c "ls -lhas /home/ /home/joao /home/joao/Desktop /home/joao/.local/share/code-server"
+    - docker exec joao bash -c "docker ps && python --version && java --version"
+    - docker exec joao bash -c "systemctl status --no-pager"
+    - curl -fsSL http://localhost:8080
+    - docker rm -f joao
+# Depois
+# https://medium.com/@hfally/a-gitlab-ci-config-to-deploy-to-your-server-via-ssh-43bf3cf93775

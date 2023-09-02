@@ -1,26 +1,40 @@
 services:
   user:
     image: "${USER_CONTAINER_IMAGE}"
-    runtime: sysbox-runc
+  #  runtime: sysbox-runc
+  # Se não estiver usando sysbox, comente a linha acima e descomente a linha abaixo.
+    privileged: true
+
     container_name: "${USERNAME}"
     volumes:
      - vol-user:/home/${USERNAME}
     networks:
       - net-user
+    ports:
+      - "${CODEPORT}:8080"
+      - "${SSHPORT}:22"
     environment:
+    #  Usuário que será criado quando o container for criado
       USERNAME: "${USERNAME}"
       PASSWORD: "${PASSWORD}"
+    #  Para escolher em qual Workspace o code-server irá abrir na primeira vez
+      DEFAULT_WORKSPACE: "/home/${USERNAME}/Desktop"
+
+    #  Para desativar a autenticação do code-server no config.yaml (pode ser password, none)
+    #  CODEAUTH: "none"
+    
+    #  Se quiser que a instalação do code-server seja substituída pela padrão
+    #  REPLACE_EXISTING_INSTALL: "replace"
+
+    #  Para escolher onde o nginx irá procurar pelos arquivos html
+    #  DEFAULT_NGINXROOT: "/home/${USERNAME}/Desktop/public_html"
     restart: unless-stopped
     deploy:
-      #restart_policy:
-      #  condition: on-failure
-      #  delay: 5s
-      #  max_attempts: 3
-      #  window: 120s
+    # Limites de cpu e memória.
       resources:
         limits:
           cpus: '1'
-          memory: 1G
+          memory: 2G
         reservations:
           memory: 512M
 

@@ -10,10 +10,12 @@ export INSTALL_OLDUSER="$INSTALL_USER"
 export INSTALL_OLDHOME="$INSTALL_HOME"
 export INSTALL_USER="$USERNAME"
 export INSTALL_HOME="/home/$USERNAME"
-export WORKSPACE=${DEFAULT_WORKSPACE:-"$INSTALL_HOME/Desktop"}
+export WORKSPACE="$DEFAULT_WORKSPACE"
+
+#export WORKSPACE=${DEFAULT_WORKSPACE:-"$INSTALL_HOME/Desktop"}
 # Este script deve rodar apenas uma vez, se rodar denovo ele não faz nada
 # Basicamente se o /home/admin não existir é porque está rodando denovo
-if [ ! -d /home/admin ]; then
+if [ ! -d $INSTALL_OLDHOME ]; then
 	echo $(date -u) "Container já foi configurado, não é necessário rodar este script novamente."
 else
 	echo $(date -u) "Primeira vez do container, configurando criação do usuário $USERNAME..."
@@ -60,6 +62,6 @@ else
 	fi
 
 	# Por último... desativa o usuário admin
-	echo "Removendo usuário admin"
-	userdel --remove admin || true
+	echo "Removendo usuário $INSTALL_OLDUSER"
+	userdel --remove $INSTALL_OLDUSER || true
 fi

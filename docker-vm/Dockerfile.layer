@@ -1,7 +1,8 @@
 # erickweil/container-vm:code-ptbr-v2
 # basicamente imagem com ./install.sh, ./install_locale.sh, ./install_code.sh instalado
 # e então foi aberto uma vez, instalado extensão ms-ceintl.vscode-language-pack-pt-br via UI
-FROM erickweil/container-vm:code-ptbr-v2
+#FROM erickweil/container-vm:code-ptbr-v2
+FROM erickweil/container-vm:code
 WORKDIR /root
 
 ENV INSTALL_USER=admin
