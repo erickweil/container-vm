@@ -1,13 +1,15 @@
 #!/bin/bash
 # Configurar code-server para o novo usuário
 set -e # Se falhar 1 comando falha tudo.
+if [[ ! $INSTALL_PROGRAMS == *"code"* ]]; then exit 0; fi;
+
 REPLACE_EXISTING_INSTALL=$1
 
 CODESERVERPATH="$INSTALL_HOME/.local/share/code-server"
 OLDCODESERVERPATH="$INSTALL_OLDHOME/.local/share/code-server"
 
 # Se não tiver instalação do code-server, não precisa fazer nada
-if [ ! -f $(which code-server || echo 0) ]; then exit 0; fi;
+#if [ ! -f $(which code-server || echo 0) ]; then exit 0; fi;
 
 echo "Configurando Code-Sever para o usuário $USERNAME"
 
@@ -19,7 +21,8 @@ systemctl disable code-server@$INSTALL_OLDUSER || true
 # Todas as extensões, configurações, workspaces, etc.. configurados serão perdidos
 if [ "$REPLACE_EXISTING_INSTALL" == "replace" ]; then
 	echo "Deletada instalação Atual"
-	rm -r -f $CODESERVERPATH
+	rm -r -f $CODESERVERPATH || true
+	rm "$INSTALL_HOME/.config/code-server/config.yaml" || true
 fi
 
 # Mover a Instalação padrão, se não tiver
@@ -36,17 +39,19 @@ if [ ! -d "$CODESERVERPATH" ] && [ -d "$OLDCODESERVERPATH" ]; then
 	# Move sem dar o problema da subpasta
 	mv $OLDCODESERVERPATH $CODESERVERPATH
 
+	rm -r -f $CODESERVERPATH/CachedProfilesData
+	
+	# Não precisa mais, extensões estão em outro lugar
 	# O objetivo é renomear os arquivos necessários para o funcionamento do code-server após ser movido de
 	# um diretório para outro.
 	# https://stackoverflow.com/questions/525592/find-and-replace-inside-a-text-file-from-a-bash-command
-	ENCONTRAR="$INSTALL_OLDHOME"
-	SUBSTITUIR="$INSTALL_HOME"
+	# ENCONTRAR="$INSTALL_OLDHOME"
+	# SUBSTITUIR="$INSTALL_HOME"
 	# No caso, O '#' é o separador, porque tem / na variável, apesar que um caminho poderia ter # mas aí é demais né
-	REGEX="s#$ENCONTRAR#$SUBSTITUIR#g"
-
-	sed -i -e $REGEX $CODESERVERPATH/extensions/extensions.json || true
-	sed -i -e $REGEX $CODESERVERPATH/languagepacks.json || true
-	rm -r -f $CODESERVERPATH/CachedProfilesData
+	# REGEX="s#$ENCONTRAR#$SUBSTITUIR#g"
+	
+	# sed -i -e $REGEX $CODESERVERPATH/extensions/extensions.json || true
+	# sed -i -e $REGEX $CODESERVERPATH/languagepacks.json || true
 fi
 
 # Criar configuração, se não tiver

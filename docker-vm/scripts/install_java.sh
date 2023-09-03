@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e # Se falhar 1 comando falha tudo.
+if [[ ! $INSTALL_PROGRAMS == *"java"* ]]; then exit 0; fi;
 
 # https://www.linode.com/docs/guides/how-to-install-openjdk-ubuntu-22-04/
 echo "Instalar Java"

@@ -24,7 +24,10 @@ EXPOSE 8080
 
 WORKDIR /root
 
-
+# Controle de que programas serão instalados ao fazer o build
+# https://stackoverflow.com/questions/229551/how-to-check-if-a-string-contains-a-substring-in-bash
+# if [[ ! $INSTALL_PROGRAMS == *"code"* ]]; then exit 0; fi;
+ARG INSTALL_PROGRAMS="locale code docker php-nginx ssh node python java kubectl mariadb-client"
 # Para escolher o Timezone que o container irá usar
 # ENV TZ=America/New_York
 # Para escolher o Locale que será instalado
@@ -32,8 +35,12 @@ WORKDIR /root
 
 ENV INSTALL_USER=admin
 ENV INSTALL_HOME=/home/admin
-# VER DEPOIS: Configurar que programas instalar ou não via alguma variável de ambiente
-# Por enquanto é só comentar ou descomentar aqui na hora de fazer o build
+
+# Onde as extensões do code-server serão instaladas
+ENV VSCODE_EXTENSIONS_PATH=/opt/vscode-extensions
+
+ENV INSTALL_PROGRAMS=$INSTALL_PROGRAMS
+
 COPY scripts/*.sh ./
 COPY configs/* ./
 RUN chmod 644 ./* && chmod +x *.sh \
@@ -41,27 +48,35 @@ RUN chmod 644 ./* && chmod +x *.sh \
 	&& /bin/bash ./install.sh \
 	&& /bin/bash ./install_locale.sh \
 	&& /bin/bash ./install_code.sh \
-#	&& /bin/bash ./install_docker.sh \
-#	&& /bin/bash ./install_php_nginx.sh \
-#	&& /bin/bash ./install_ssh.sh \
-#	&& /bin/bash ./install_node.sh \
-#	&& /bin/bash ./install_python.sh \
-#	&& /bin/bash ./install_java.sh \
-#	&& /bin/bash ./install_kubectl.sh \
-#	&& /bin/bash ./install_mariadb_client.sh \
+	&& /bin/bash ./install_docker.sh \
+	&& /bin/bash ./install_php_nginx.sh \
+	&& /bin/bash ./install_ssh.sh \
+	&& /bin/bash ./install_node.sh \
+	&& /bin/bash ./install_python.sh \
+	&& /bin/bash ./install_java.sh \
+	&& /bin/bash ./install_kubectl.sh \
+	&& /bin/bash ./install_mariadb_client.sh \
 # Por último... Limpar cache do apt
 	&& rm -rf /var/lib/apt/lists/*
 
+# Copiar extensão pt-br e configuração do code-server, que não é possível fazer via script
+# MAS DÁ PRA COPIAR HA HA HA (Será que pode dar problema com a versão do code-server?)
+COPY --from=erickweil/container-vm:code-ptbr /opt/vscode-extensions /opt/vscode-extensions
+COPY --from=erickweil/container-vm:code-ptbr /home/admin/.local/share/code-server /home/admin/.local/share/code-server
+
+# Processo para gerar erickweil/container-vm:code-ptbr (só necessário se mudar como as extensões funcionam)
+# (Comente as linhas do COPY Acima antes de fazer)
 # Realizar build e arrumar as coisas iniciais
-# docker build -t container-vm:code .
+# docker build -t erickweil/container-vm:code .
 # Executar container:
-# docker rm -f vm01; docker run -d --name vm01 -p 3000:8080 --privileged container-vm:code
+# docker rm -f vm01; docker run -d --name vm01 -p 3000:8080 --privileged erickweil/container-vm:code
 # 1. Abre no navegador http://localhost:3000/ e instala a extensão ms-ceintl.vscode-language-pack-pt-br
 # 2. Clicar botão para reiniciar com o locale pt-br
 # 3. Escolher temas -> Modo escuro
 # 4. Configuração "Terminal > Integrated: Allow Chords" desmarcar (Para funcionar crtl+k usando o nano) 
+# NÃO. Arrumar as permissões da pasta de exntensões do code-server: chmod -R g=u /opt/vscode-extensions
 # Aplicar container que foi modificado para ser uma imagem
-# docker stop vm01; docker commit vm01 container-vm:code-ptbr-v2
+# docker stop vm01; docker commit vm01 erickweil/container-vm:code-ptbr
 
 ENTRYPOINT ["sh","/root/docker-entrypoint.sh"]
 CMD ["/sbin/init", "--log-level=err"]

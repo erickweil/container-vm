@@ -25,6 +25,10 @@ else
 	echo "Criando usuário $USERNAME"
 	useradd --create-home --home-dir $INSTALL_HOME --shell /bin/bash $USERNAME
 
+	# Muda o User ID do usuário para ser o mesmo do anterior, facilita a questão das permissões
+	USERID="$(id -u $INSTALL_OLDUSER)"
+	usermod --non-unique --uid $USERID $USERNAME
+
 	# Muda a sua senha e adiciona ao grupo sudo
 	echo "$USERNAME:$PASSWORD" | chpasswd
 	adduser $USERNAME sudo
@@ -41,7 +45,7 @@ else
 	/bin/bash ./install_docker_user.sh
 	/bin/bash ./install_php_nginx_user.sh
 
-	# Garante que as permissões estão corretas, corrige possíveis problemas com volumes
+	# Garante que as permissões (pelo menos do home) estão corretas, corrige possíveis problemas com volumes
 	chown -R $USERNAME:$USERNAME /home/$USERNAME
 
 	# Será necessário se o volume já existe? 

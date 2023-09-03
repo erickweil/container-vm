@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e # Se falhar 1 comando falha tudo.
+if [[ ! $INSTALL_PROGRAMS == *"docker"* ]]; then exit 0; fi;
 
 # https://github.com/nestybox/dockerfiles/blob/5b7ec2230af7fb65eb820277e8c408cfa68f79b7/ubuntu-jammy-systemd-docker/Dockerfile
 # Install Docker

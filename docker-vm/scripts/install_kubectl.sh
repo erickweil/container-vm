@@ -1,5 +1,7 @@
 #!/bin/bash
 set -e # Se falhar 1 comando falha tudo.
+if [[ ! $INSTALL_PROGRAMS == *"kubectl"* ]]; then exit 0; fi;
+
 # https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
 # https://www.cherryservers.com/blog/install-kubectl-ubuntu
 # https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/

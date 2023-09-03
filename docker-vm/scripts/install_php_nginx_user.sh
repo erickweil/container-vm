@@ -1,6 +1,7 @@
 #!/bin/bash
 # Configurar nginx para o novo usuário
 set -e # Se falhar 1 comando falha tudo.
+if [[ ! $INSTALL_PROGRAMS == *"php-nginx"* ]]; then exit 0; fi;
 
 # Se não tiver instalação do nginx, não precisa fazer nada
 if [ ! -d "/etc/nginx" ]; then

@@ -5,10 +5,12 @@ Criar containers docker que funcionam quase idêntico à uma máquina virtual. C
 # Utilização Rápida
 
 **Primeira vez**:
-- Instalar o [Sysbox](https://github.com/nestybox/sysbox) (Alternativa é utilizar --privileged para subir os containers, mas com algumas dezenas de containers iria dar erro por 'estarem arquivos demais abertos' Veja [#1](https://oooops.dev/2021/01/17/file-limits-and-how-the-too-many-open-files-error-can-pop-up-unexpectedly/) [#2](https://serverfault.com/questions/1053187/systemd-fails-to-run-in-a-docker-container-when-using-cgroupv2-cgroupns-priva) )
 - (Opcional) editar o docker-compose.yml para controlar a limitação de cpu e memória, bem como configurar outras variáveis de ambiente, portas, volumes, etc...
-- Criar a rede docker que os containers irão fazer parte `docker network create nome-da-rede`
-- Editar o arquivo .env.template e colocar ali a imagem docker e o nome da rede docker criada.
+- (Opcional) Editar o arquivo .env.template e colocar a imagem docker desejada
+  - erickweil/container-vm:code (Padrão) - Possui apenas o code-server e utilitários básicos de terminal instalado
+  - erickweil/container-vm:complete - Costruído a partir da imagem :code, docker, web server nginx com php ativado, servidor ssh, node, python, java, kubectl, cliente mysql
+- Criar a rede docker que os containers irão fazer parte definido no arquivo .env.template (Padrão net-vm) `docker network create net-vm`
+
 
 **Para cada container**:
 Executar o script novo_container.sh recebendo o usuário, senha, porta do code server e porta do ssh.
@@ -21,6 +23,9 @@ bash ./novo_container.sh joao 12345678 8080 22
 - Senha: '12345678'
 - Porta do Code-Server: 8080
 - Porta SSH: 22
+
+**Recomendações**:
+- Instalar o [Sysbox](https://github.com/nestybox/sysbox) (Devido ao uso de Systemd e Docker dentro dos containers, Sem Sysbox os container previsam ser iniciados com --privileged, além dos problemas de segurança que isso causa com algumas dezenas de containers já se torna impossível subir mais containers dando um erro `too many open files` Veja [#1](https://oooops.dev/2021/01/17/file-limits-and-how-the-too-many-open-files-error-can-pop-up-unexpectedly/) [#2](https://serverfault.com/questions/1053187/systemd-fails-to-run-in-a-docker-container-when-using-cgroupv2-cgroupns-priva) )
 
 # Como funciona:
 
