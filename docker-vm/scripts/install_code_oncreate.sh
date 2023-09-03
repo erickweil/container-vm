@@ -1,17 +1,14 @@
 #!/bin/bash
-# Configurar code-server para o novo usuário
 set -e # Se falhar 1 comando falha tudo.
 if [[ ! $INSTALL_PROGRAMS == *"code"* ]]; then exit 0; fi;
+echo "Configurando Code-Sever para o usuário $USERNAME"
 
-REPLACE_EXISTING_INSTALL=$1
-
+# Configurar code-server para o novo usuário
 CODESERVERPATH="$INSTALL_HOME/.local/share/code-server"
 OLDCODESERVERPATH="$INSTALL_OLDHOME/.local/share/code-server"
 
 # Se não tiver instalação do code-server, não precisa fazer nada
 #if [ ! -f $(which code-server || echo 0) ]; then exit 0; fi;
-
-echo "Configurando Code-Sever para o usuário $USERNAME"
 
 # Desativar instalação antiga
 systemctl stop code-server@$INSTALL_OLDUSER || true

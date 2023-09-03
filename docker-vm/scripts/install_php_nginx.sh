@@ -1,8 +1,9 @@
 #!/bin/bash
-# https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
 set -e # Se falhar 1 comando falha tudo.
 if [[ ! $INSTALL_PROGRAMS == *"php-nginx"* ]]; then exit 0; fi;
+echo "Instalando php-nginx"
 
+# https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04
 # Será configurado para escutar na porta 80 e hospedar os sites no diretóio /var/www/html por padrão
 echo "Instalar Nginx e PHP" \
 	&& apt-get install --no-install-recommends -y php8.1 \

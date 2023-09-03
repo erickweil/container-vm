@@ -70,7 +70,7 @@ auth: $CODEAUTH
 password: "$PASSWORD"
 cert: false
 disable-workspace-trust: true
-extensions-dir: "$VSCODE_EXTENSIONS"
+extensions-dir: "$VSCODE_EXTENSIONS_PATH"
 disable-getting-started-override: true
 locale: pt-br
 welcome-text: "Bem vindo $USERNAME!"

@@ -26,12 +26,19 @@ WORKDIR /root
 
 # Controle de que programas serão instalados ao fazer o build
 # https://stackoverflow.com/questions/229551/how-to-check-if-a-string-contains-a-substring-in-bash
-# if [[ ! $INSTALL_PROGRAMS == *"code"* ]]; then exit 0; fi;
-ARG INSTALL_PROGRAMS="locale code docker php-nginx ssh node python java kubectl mariadb-client"
+# if [[ ! $INSTALL_PROGRAMS == *"code"* ]]; then echo "Não"; else echo "Sim"; fi;
+
+#:code
+#ARG INSTALL_PROGRAMS="locale code"
+#:complete
+ARG INSTALL_PROGRAMS="locale code docker php-nginx ssh node python java kubectl mariadb-client" 
+
+ENV INSTALL_PROGRAMS=$INSTALL_PROGRAMS
+
 # Para escolher o Timezone que o container irá usar
-# ENV TZ=America/New_York
+ENV TZ=America/New_York
 # Para escolher o Locale que será instalado
-# ENV LANG=pt_BR.UTF-8
+ENV LANG=pt_BR.UTF-8
 
 ENV INSTALL_USER=admin
 ENV INSTALL_HOME=/home/admin
@@ -39,23 +46,18 @@ ENV INSTALL_HOME=/home/admin
 # Onde as extensões do code-server serão instaladas
 ENV VSCODE_EXTENSIONS_PATH=/opt/vscode-extensions
 
-ENV INSTALL_PROGRAMS=$INSTALL_PROGRAMS
-
-COPY scripts/*.sh ./
-COPY configs/* ./
+# Instalar primeiro o code para ter cache nos layers pelo menos do code
+COPY scripts/install.sh \
+	scripts/install_locale.sh \
+	scripts/install_code.sh \
+	configs/config.yaml \
+	./
 RUN chmod 644 ./* && chmod +x *.sh \
 	&& export DEBIAN_FRONTEND=noninteractive \
+	&& apt-get update \
 	&& /bin/bash ./install.sh \
 	&& /bin/bash ./install_locale.sh \
 	&& /bin/bash ./install_code.sh \
-	&& /bin/bash ./install_docker.sh \
-	&& /bin/bash ./install_php_nginx.sh \
-	&& /bin/bash ./install_ssh.sh \
-	&& /bin/bash ./install_node.sh \
-	&& /bin/bash ./install_python.sh \
-	&& /bin/bash ./install_java.sh \
-	&& /bin/bash ./install_kubectl.sh \
-	&& /bin/bash ./install_mariadb_client.sh \
 # Por último... Limpar cache do apt
 	&& rm -rf /var/lib/apt/lists/*
 
@@ -63,6 +65,33 @@ RUN chmod 644 ./* && chmod +x *.sh \
 # MAS DÁ PRA COPIAR HA HA HA (Será que pode dar problema com a versão do code-server?)
 COPY --from=erickweil/container-vm:code-ptbr /opt/vscode-extensions /opt/vscode-extensions
 COPY --from=erickweil/container-vm:code-ptbr /home/admin/.local/share/code-server /home/admin/.local/share/code-server
+
+# Teste instalar extensões via terminal
+#COPY scripts/install_code_asuser.sh ./
+#RUN chmod 644 install_code_asuser.sh \
+#	&& chmod +x install_code_asuser.sh \
+#	&& sudo -H -i -u $INSTALL_USER bash < ./install_code_asuser.sh
+
+# Porque separar em outro Dockerfile se dá pra fazer em 1?
+COPY configs/* scripts/* ./
+RUN chmod 644 ./* && chmod +x *.sh \
+	&& export DEBIAN_FRONTEND=noninteractive \	
+	&& apt-get update \
+	&& /bin/bash ./install_mariadb_client.sh \
+	&& /bin/bash ./install_python.sh \
+	&& /bin/bash ./install_kubectl.sh \
+	&& /bin/bash ./install_ssh.sh \
+	&& /bin/bash ./install_php_nginx.sh \
+	&& /bin/bash ./install_docker.sh \
+	&& /bin/bash ./install_node.sh \
+	&& /bin/bash ./install_java.sh \
+# Por último... Limpar cache do apt
+	&& rm -rf /var/lib/apt/lists/*
+
+# Este entrypoint irá criar um novo usuário caso as variáveis de ambiente
+# USERNAME e PASSWORD existam
+ENTRYPOINT ["sh","/root/docker-entrypoint.sh"]
+CMD ["/sbin/init", "--log-level=err"]
 
 # Processo para gerar erickweil/container-vm:code-ptbr (só necessário se mudar como as extensões funcionam)
 # (Comente as linhas do COPY Acima antes de fazer)
@@ -78,5 +107,14 @@ COPY --from=erickweil/container-vm:code-ptbr /home/admin/.local/share/code-serve
 # Aplicar container que foi modificado para ser uma imagem
 # docker stop vm01; docker commit vm01 erickweil/container-vm:code-ptbr
 
-ENTRYPOINT ["sh","/root/docker-entrypoint.sh"]
-CMD ["/sbin/init", "--log-level=err"]
+
+# docker build -t container-vm -f Dockerfile.layer .
+# docker rm -f vm01; docker run -d -p 3000:8080 --name vm01 --privileged container-vm
+# 1. Abre no navegador http://localhost:3000/ e instala as extensões:
+# 	- Java Language Pack - vscjava.vscode-java-pack
+#	- ESLint - dbaeumer.vscode-eslint
+#	- Kubernetes + Yaml - ms-kubernetes-tools.vscode-kubernetes-tools
+# Aplicar container que foi modificado para ser uma imagem
+# docker stop vm01; docker commit vm01 aaa
+
+# docker rm -f vm01; docker run -e "USERNAME=teste" -e "PASSWORD=teste" -v vol-vm01:/home/teste -d -p 3000:8080 --name vm01 --privileged container-vm

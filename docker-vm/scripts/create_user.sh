@@ -41,9 +41,11 @@ else
 	fi
 
 	# Executa scripts de configuração do usuário para cada programa
-	/bin/bash ./install_code_user.sh "$REPLACE_EXISTING_INSTALL"
-	/bin/bash ./install_docker_user.sh
-	/bin/bash ./install_php_nginx_user.sh
+	# https://stackoverflow.com/questions/41079143/run-all-shell-scripts-in-folder
+	for f in install_*oncreate.sh; do
+		/bin/bash "$f"
+	done
+
 
 	# Garante que as permissões (pelo menos do home) estão corretas, corrige possíveis problemas com volumes
 	chown -R $USERNAME:$USERNAME /home/$USERNAME
@@ -55,15 +57,9 @@ else
 		#chmod -R 644 /home/$USERNAME && find /home/$USERNAME -type d -print0 |xargs -0 chmod 755
 	# fi
 
-	# Configuração do usuário, configuração git e criação de chave ssh padrão
-	# Tem que rodar como usuário comum
-	if [ ! -d "$INSTALL_HOME/.ssh" ]; then
-		cp install_git_user.sh /home/$USERNAME/install_git_user.sh
-		cd /home/$USERNAME
-		chown $USERNAME:$USERNAME ./install_git_user.sh
-		sudo -H -u $USERNAME bash ./install_git_user.sh
-		rm ./install_git_user.sh
-	fi
+	for f in install_*oncreate_asuser.sh; do
+		sudo -H -i -u $INSTALL_USER bash < "$f"
+	done
 
 	# Por último... desativa o usuário admin
 	echo "Removendo usuário $INSTALL_OLDUSER"
