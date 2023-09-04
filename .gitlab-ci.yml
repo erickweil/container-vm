@@ -112,7 +112,7 @@ build-complete:
   extends: 
     - .on-commit-main
     - .mybuild-docker
-  needs: ["build-programs"]
+  needs: ["build-programs-complete"]
   stage: build-complete
   variables:
     BUILD_DIR: "./docker-vm"
@@ -126,7 +126,7 @@ build-complete:
 test:
   image: erickweil/mydocker:dind
   extends: .on-commit-main
-  needs: ["build-extensions"]
+  needs: ["build-complete"]
   stage: test
   variables:
     BUILD_TAG: $IMG_BASE:complete
