@@ -8,9 +8,9 @@ variables:
 
 stages:
   - debug
-  - publish1
-  - publish2
-  - publish3
+  - build-code
+  - build-programs
+  - build-complete
   - test
 
 debug:
@@ -71,19 +71,19 @@ build-code:
     - .on-commit-main
     - .mybuild-docker
   needs: ["debug"]
-  stage: publish1
+  stage: build-code
   variables:
     BUILD_DIR: "./docker-vm"
     BUILD_TAG: $IMG_BASE:code
     BUILD_DOCKERFILE: Dockerfile
     BUILD_ARG: "INSTALL_PROGRAMS=locale code"
 
-build-programs:
+build-programs-complete:
   extends: 
     - .on-commit-main
     - .mybuild-docker
   needs: ["build-code"]
-  stage: publish2
+  stage: build-programs
   variables:
     BUILD_DIR: "./docker-vm"
     BUILD_TAG: $IMG_BASE:programs
@@ -93,12 +93,27 @@ build-programs:
   # Renomear a imagem FROM no Dockerfile
     - sed -i -e "s#^FROM.*\$#FROM $IMG_BASE:code#g" ./docker-vm/Dockerfile.programs
 
-build-extensions:
+build-programs-mariadb-node-php:
+  extends:
+    - .on-commit-main
+    - .mybuild-docker
+  needs: ["build-code"]
+  stage: build-programs
+  variables:
+    BUILD_DIR: "./docker-vm"
+    BUILD_TAG: $IMG_BASE:mariadb-node-php
+    BUILD_DOCKERFILE: Dockerfile.programs
+    BUILD_ARG: "INSTALL_PROGRAMS=locale code php-nginx node mariadb-client"
+  before_script:
+  # Renomear a imagem FROM no Dockerfile
+    - sed -i -e "s#^FROM.*\$#FROM $IMG_BASE:code#g" ./docker-vm/Dockerfile.programs
+
+build-complete:
   extends: 
     - .on-commit-main
     - .mybuild-docker
-  needs: ["build-programs"]
-  stage: publish3
+  needs: ["build-programs-complete"]
+  stage: build-complete
   variables:
     BUILD_DIR: "./docker-vm"
     BUILD_TAG: $IMG_BASE:complete
@@ -111,24 +126,28 @@ build-extensions:
 test:
   image: erickweil/mydocker:dind
   extends: .on-commit-main
-  needs: ["build-extensions"]
+  needs: ["build-complete"]
   stage: test
   variables:
     BUILD_TAG: $IMG_BASE:complete
   script:
     - echo "Vendo se o container inicia"
+    - docker rm -f containervm-joao || true
+    - docker volume rm vol-containervm-joao || true
     - cd ./docker-vm
-    - docker network create net-vm
-    - bash ./novo_container.sh joao 12345678 8080 22
+    - docker network create net-vm || true
+    # Não expor a porta
+    - sed -i -e "s/^.*ports:.*\$/# Não vai expor a porta/g" ./docker-vm/docker-compose.yml
+    - sed -i -e "s/^.*CODEPORT.*\$/# Não vai expor a porta/g" ./docker-vm/docker-compose.yml
+    - sed -i -e "s/^.*SSHPORT.*\$/# Não vai expor a porta/g" ./docker-vm/docker-compose.yml
+    - bash ./novo_container.sh containervm-joao 12345678 8080 22
     - sleep 10
     - docker ps -a
-    - docker logs joao
-    - docker exec joao bash -c "ls -lhas /home/ /home/joao /home/joao/Desktop /home/joao/.local/share/code-server /opt"
-    - docker exec joao bash -c "docker ps && python --version && node -v && java -version"
-    - docker exec joao bash -c "systemctl status --no-pager"
-    - curl -fsSL http://localhost:80
-    - curl -fsSL http://localhost:8080
-    - docker rm -f joao
+    - docker logs containervm-joao
+    - docker exec containervm-joao bash -c "ls -lhas /home/ /home/containervm-joao /home/containervm-joao/Desktop /home/containervm-joao/.local/share/code-server /opt"
+    - docker exec containervm-joao bash -c "docker ps && python --version && node -v && java -version"
+    - docker exec containervm-joao bash -c "systemctl status --no-pager"
+    - docker rm -f containervm-joao
 
 # Depois
 
