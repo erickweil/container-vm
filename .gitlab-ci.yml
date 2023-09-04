@@ -111,7 +111,7 @@ build-extensions:
 test:
   image: erickweil/mydocker:dind
   extends: .on-commit-main
-  needs: ["build-complete"]
+  needs: ["build-extensions"]
   stage: test
   variables:
     BUILD_TAG: $IMG_BASE:complete
