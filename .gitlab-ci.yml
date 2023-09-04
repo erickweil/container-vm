@@ -91,7 +91,7 @@ build-programs:
     BUILD_ARG: "INSTALL_PROGRAMS=locale code docker php-nginx ssh node python java kubectl mariadb-client"
   before_script:
   # Renomear a imagem FROM no Dockerfile
-    - sed -i -e "s#^FROM.*\$#FROM $IMG_BASE:code#g" Dockerfile.programs
+    - sed -i -e "s#^FROM.*\$#FROM $IMG_BASE:code#g" ./docker-vm/Dockerfile.programs
 
 build-extensions:
   extends: 
@@ -106,7 +106,7 @@ build-extensions:
     BUILD_ARG: "INSTALL_VSCODE_EXTENSIONS=vscjava.vscode-java-pack dbaeumer.vscode-eslint ms-kubernetes-tools.vscode-kubernetes-tools"
   before_script:
   # Renomear a imagem FROM no Dockerfile
-    - sed -i -e "s#^FROM.*\$#FROM $IMG_BASE:programs#g" Dockerfile.extensions
+    - sed -i -e "s#^FROM.*\$#FROM $IMG_BASE:programs#g" ./docker-vm/Dockerfile.extensions
 
 test:
   image: erickweil/mydocker:dind
@@ -118,6 +118,7 @@ test:
   script:
     - echo "Vendo se o container inicia"
     - cd ./docker-vm
+    - docker network create net-vm
     - bash ./novo_container.sh joao 12345678 8080 22
     - sleep 10
     - docker ps -a
