@@ -1,5 +1,7 @@
 #!/bin/bash
 set -e # Se falhar 1 comando falha tudo.
+if [[ ! $INSTALL_PROGRAMS == *"locale"* ]]; then exit 0; fi;
+echo "Instalando locale"
 
 # Para ajustar a Timezone
 # https://serverfault.com/questions/949991/how-to-install-tzdata-on-a-ubuntu-docker-image

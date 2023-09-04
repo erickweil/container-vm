@@ -10,10 +10,11 @@ stages:
   - debug
   - publish1
   - publish2
+  - publish3
   - test
 
 debug:
-  image: docker:dind
+  image: erickweil/mydocker:dind
   extends: 
     - .on-commit-main
   # - .disable-git-clone
@@ -34,11 +35,12 @@ debug:
     #- ls -lhas /var/lib/docker
 
 .mybuild-docker:
-  image: docker:dind
+  image: erickweil/mydocker:dind
   variables:
     BUILD_DIR: "."
     BUILD_DOCKERFILE: "Dockerfile"
     BUILD_TAG: $CI_REGISTRY/$GITLAB_USER_LOGIN/$CI_PROJECT_NAME:latest
+    BUILD_ARG: ""
   script:
     - cd $BUILD_DIR
     - echo "Realizando o build da imagem $BUILD_TAG no diretório $BUILD_DIR"
@@ -59,6 +61,7 @@ debug:
       --label "org.opencontainers.image.revision=$CI_COMMIT_SHA"
       --label "org.opencontainers.image.version=$CI_COMMIT_REF_NAME"
       --tag $BUILD_TAG
+      --build-arg="$BUILD_ARG"
       -f $BUILD_DOCKERFILE
       .
     - docker push "$BUILD_TAG"
@@ -73,10 +76,9 @@ build-code:
     BUILD_DIR: "./docker-vm"
     BUILD_TAG: $IMG_BASE:code
     BUILD_DOCKERFILE: Dockerfile
-#  after_script:
-#    - docker tag $BUILD_TAG container-vm:code # Para funcionar o próximo estágio
+    BUILD_ARG: "INSTALL_PROGRAMS=locale code"
 
-build-complete:
+build-programs:
   extends: 
     - .on-commit-main
     - .mybuild-docker
@@ -84,21 +86,35 @@ build-complete:
   stage: publish2
   variables:
     BUILD_DIR: "./docker-vm"
+    BUILD_TAG: $IMG_BASE:programs
+    BUILD_DOCKERFILE: Dockerfile.programs
+    BUILD_ARG: "INSTALL_PROGRAMS=locale code docker php-nginx ssh node python java kubectl mariadb-client"
+  before_script:
+  # Renomear a imagem FROM no Dockerfile
+    - sed -i -e "s#^FROM.*\$#FROM $IMG_BASE:code#g" Dockerfile.programs
+
+build-extensions:
+  extends: 
+    - .on-commit-main
+    - .mybuild-docker
+  needs: ["build-programs"]
+  stage: publish3
+  variables:
+    BUILD_DIR: "./docker-vm"
     BUILD_TAG: $IMG_BASE:complete
-    BUILD_DOCKERFILE: Dockerfile.complete
+    BUILD_DOCKERFILE: Dockerfile.extensions
+    BUILD_ARG: "INSTALL_VSCODE_EXTENSIONS=vscjava.vscode-java-pack dbaeumer.vscode-eslint ms-kubernetes-tools.vscode-kubernetes-tools"
+  before_script:
+  # Renomear a imagem FROM no Dockerfile
+    - sed -i -e "s#^FROM.*\$#FROM $IMG_BASE:programs#g" Dockerfile.extensions
 
 test:
-  image: docker:dind
+  image: erickweil/mydocker:dind
   extends: .on-commit-main
-  needs: ["build-complete"]
+  needs: ["build-extensions"]
   stage: test
   variables:
     BUILD_TAG: $IMG_BASE:complete
-  before_script:
-    - apk update
-    - apk add bash
-    - apk add curl
-    - apk add gettext libintl # para funcionar envsubst
   script:
     - echo "Vendo se o container inicia"
     - cd ./docker-vm
@@ -106,9 +122,10 @@ test:
     - sleep 10
     - docker ps -a
     - docker logs joao
-    - docker exec joao bash -c "ls -lhas /home/ /home/joao /home/joao/Desktop /home/joao/.local/share/code-server"
-    - docker exec joao bash -c "docker ps && python --version && java --version"
+    - docker exec joao bash -c "ls -lhas /home/ /home/joao /home/joao/Desktop /home/joao/.local/share/code-server /opt"
+    - docker exec joao bash -c "docker ps && python --version && node -v && java -version"
     - docker exec joao bash -c "systemctl status --no-pager"
+    - curl -fsSL http://localhost:80
     - curl -fsSL http://localhost:8080
     - docker rm -f joao
 

@@ -1,0 +1,17 @@
+FROM erickweil/container-vm:programs
+
+WORKDIR /root
+
+ARG INSTALL_VSCODE_EXTENSIONS="vscjava.vscode-java-pack dbaeumer.vscode-eslint ms-kubernetes-tools.vscode-kubernetes-tools"
+ENV INSTALL_VSCODE_EXTENSIONS=$INSTALL_VSCODE_EXTENSIONS
+
+# Instalar extensões via terminal
+COPY scripts/install_code_asuser.sh ./
+RUN chmod +x install_code_asuser.sh && \
+	# Passar que extensões instalar substituindo o valor do ENV
+    envsubst '${INSTALL_VSCODE_EXTENSIONS}' < "./install_code_asuser.sh" > "./install_code_asuser.env.sh" \
+    && sudo -H -i -u $INSTALL_USER bash < ./install_code_asuser.env.sh \
+	# Limpando o cache que fica
+	&& rm -f $INSTALL_HOME/.local/share/code-server/CachedExtensionVSIXs/*
+# ------------------------------------------------------------------
+# docker build -t erickweil/container-vm:complete -f Dockerfile.extensions .

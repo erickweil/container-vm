@@ -1,0 +1,9 @@
+FROM docker:dind
+
+# para funcionar envsubst entre outras coisas
+RUN apk update \
+    && apk add bash \
+    && apk add curl \
+    && apk add gettext libintl
+
+# docker build -t erickweil/mydocker:dind -f Dockerfile.mydockerdind .

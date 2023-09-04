@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "Instalar programas essenciais"
-apt-get update && apt-get install -y \
+apt-get install -y \
 	nano \
 	vim \
 	curl \
