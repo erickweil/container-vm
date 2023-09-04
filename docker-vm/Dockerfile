@@ -15,10 +15,6 @@
 #
 FROM ghcr.io/nestybox/ubuntu-jammy-systemd:latest
 
-# SSH Server
-# EXPOSE 22
-
-EXPOSE 80
 # Code-Server
 EXPOSE 8080
 
@@ -29,9 +25,7 @@ WORKDIR /root
 # if [[ ! $INSTALL_PROGRAMS == *"code"* ]]; then echo "Não"; else echo "Sim"; fi;
 
 #:code
-#ARG INSTALL_PROGRAMS="locale code"
-#:complete
-ARG INSTALL_PROGRAMS="locale code docker php-nginx ssh node python java kubectl mariadb-client" 
+ARG INSTALL_PROGRAMS="locale code" 
 
 ENV INSTALL_PROGRAMS=$INSTALL_PROGRAMS
 
@@ -66,33 +60,12 @@ RUN chmod 644 ./* && chmod +x *.sh \
 COPY --from=erickweil/container-vm:code-ptbr /opt/vscode-extensions /opt/vscode-extensions
 COPY --from=erickweil/container-vm:code-ptbr /home/admin/.local/share/code-server /home/admin/.local/share/code-server
 
-# Teste instalar extensões via terminal
-#COPY scripts/install_code_asuser.sh ./
-#RUN chmod 644 install_code_asuser.sh \
-#	&& chmod +x install_code_asuser.sh \
-#	&& sudo -H -i -u $INSTALL_USER bash < ./install_code_asuser.sh
-
-# Porque separar em outro Dockerfile se dá pra fazer em 1?
-COPY configs/* scripts/* ./
-RUN chmod 644 ./* && chmod +x *.sh \
-	&& export DEBIAN_FRONTEND=noninteractive \	
-	&& apt-get update \
-	&& /bin/bash ./install_mariadb_client.sh \
-	&& /bin/bash ./install_python.sh \
-	&& /bin/bash ./install_kubectl.sh \
-	&& /bin/bash ./install_ssh.sh \
-	&& /bin/bash ./install_php_nginx.sh \
-	&& /bin/bash ./install_docker.sh \
-	&& /bin/bash ./install_node.sh \
-	&& /bin/bash ./install_java.sh \
-# Por último... Limpar cache do apt
-	&& rm -rf /var/lib/apt/lists/*
-
 # Este entrypoint irá criar um novo usuário caso as variáveis de ambiente
 # USERNAME e PASSWORD existam
 ENTRYPOINT ["sh","/root/docker-entrypoint.sh"]
 CMD ["/sbin/init", "--log-level=err"]
 
+# ------------------------------------------------------------------
 # Processo para gerar erickweil/container-vm:code-ptbr (só necessário se mudar como as extensões funcionam)
 # (Comente as linhas do COPY Acima antes de fazer)
 # Realizar build e arrumar as coisas iniciais
@@ -106,15 +79,3 @@ CMD ["/sbin/init", "--log-level=err"]
 # NÃO. Arrumar as permissões da pasta de exntensões do code-server: chmod -R g=u /opt/vscode-extensions
 # Aplicar container que foi modificado para ser uma imagem
 # docker stop vm01; docker commit vm01 erickweil/container-vm:code-ptbr
-
-
-# docker build -t container-vm -f Dockerfile.layer .
-# docker rm -f vm01; docker run -d -p 3000:8080 --name vm01 --privileged container-vm
-# 1. Abre no navegador http://localhost:3000/ e instala as extensões:
-# 	- Java Language Pack - vscjava.vscode-java-pack
-#	- ESLint - dbaeumer.vscode-eslint
-#	- Kubernetes + Yaml - ms-kubernetes-tools.vscode-kubernetes-tools
-# Aplicar container que foi modificado para ser uma imagem
-# docker stop vm01; docker commit vm01 aaa
-
-# docker rm -f vm01; docker run -e "USERNAME=teste" -e "PASSWORD=teste" -v vol-vm01:/home/teste -d -p 3000:8080 --name vm01 --privileged container-vm

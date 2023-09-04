@@ -13,3 +13,6 @@ usermod -a -G docker $INSTALL_USER
 
 # Bash Completion
 curl -fsSL https://raw.githubusercontent.com/docker/docker-ce/master/components/cli/contrib/completion/bash/docker -o /etc/bash_completion.d/docker.sh
+
+# Limpar cache
+rm get-docker.sh

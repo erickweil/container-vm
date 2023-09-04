@@ -19,4 +19,7 @@ envsubst < "config.yaml" > "$INSTALL_HOME/.config/code-server/config.yaml"
 # Iniciar code-server
 systemctl enable --now code-server@$INSTALL_USER || true
 
+# Limpar cache
+rm -r -f .cache/code-server || true
+
 echo "TERMINADA INSTALAÇÃO DO CODE-SERVER"

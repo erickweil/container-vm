@@ -1,0 +1,58 @@
+FROM erickweil/container-vm:code
+
+# SSH Server
+# EXPOSE 22
+
+# Nginx
+# EXPOSE 80
+
+WORKDIR /root
+
+# Controle de que programas serão instalados ao fazer o build
+# https://stackoverflow.com/questions/229551/how-to-check-if-a-string-contains-a-substring-in-bash
+# if [[ ! $INSTALL_PROGRAMS == *"code"* ]]; then echo "Não"; else echo "Sim"; fi;
+
+#:code
+#ARG INSTALL_PROGRAMS="locale code"
+#:complete
+ARG INSTALL_PROGRAMS="locale \
+	code \
+	docker \
+	php-nginx \
+	ssh \
+	node \
+	python \
+	java \
+	kubectl \
+	mariadb-client"
+ENV INSTALL_PROGRAMS=$INSTALL_PROGRAMS
+
+# Porque separar em outro Dockerfile se dá pra fazer em 1? R: Porque assim fica mais rápido o tempo de build (Cache)
+COPY configs/* scripts/* ./
+RUN chmod 644 ./* && chmod +x *.sh \
+	&& export DEBIAN_FRONTEND=noninteractive \	
+	&& apt-get update \
+	&& /bin/bash ./install_mariadb_client.sh \
+	&& /bin/bash ./install_python.sh \
+	&& /bin/bash ./install_kubectl.sh \
+	&& /bin/bash ./install_ssh.sh \
+	&& /bin/bash ./install_php_nginx.sh \
+	&& /bin/bash ./install_docker.sh \
+	&& /bin/bash ./install_node.sh \
+	&& /bin/bash ./install_java.sh \
+# Por último... Limpar cache do apt
+	&& rm -rf /var/lib/apt/lists/*
+
+# ------------------------------------------------------------------
+# docker build -t erickweil/container-vm:programs -f Dockerfile.programs .
+
+
+# docker rm -f vm01; docker run -d -p 3000:8080 --name vm01 --privileged container-vm
+# 1. Abre no navegador http://localhost:3000/ e instala as extensões:
+# 	- Java Language Pack - vscjava.vscode-java-pack
+#	- ESLint - dbaeumer.vscode-eslint
+#	- Kubernetes + Yaml - ms-kubernetes-tools.vscode-kubernetes-tools
+# Aplicar container que foi modificado para ser uma imagem
+# docker stop vm01; docker commit vm01 aaa
+
+# docker rm -f vm01; docker run -e "USERNAME=teste" -e "PASSWORD=teste" -v vol-vm01:/home/teste -d -p 3000:8080 --name vm01 --privileged container-vm
