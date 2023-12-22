@@ -5,19 +5,32 @@ Criar containers docker que funcionam quase idêntico à uma máquina virtual. C
 # Utilização Rápida
 
 **Primeira vez**:
-- (Opcional) editar o docker-compose.yml para controlar a limitação de cpu e memória, bem como configurar outras variáveis de ambiente, portas, volumes, etc...
-- (Opcional) Editar o arquivo .env.template e colocar a imagem docker desejada
+- Editar o application/templates/docker-compose.yml e escolher se irá utilizar sysbox, e também para controlar a limitação de cpu e memória, bem como configurar outras variáveis de ambiente, portas, volumes, etc...
+- (Opcional) Editar o arquivo application/env.sh e colocar as configurações desejadas
   - erickweil/container-vm:code (Padrão) - Possui apenas o code-server e utilitários básicos de terminal instalado
   - erickweil/container-vm:complete - Costruído a partir da imagem :code, docker, web server nginx com php ativado, servidor ssh, node, python, java, kubectl, cliente mysql
-- Criar a rede docker que os containers irão fazer parte definido no arquivo .env.template (Padrão net-vm) `docker network create net-vm`
+- Se deseja utilizar o mysql, deve ter o cliente de terminal mysql instalado e o arquivo .my.cnf com a senha em $HOME/.my.cnf
+```
+[client]
+user=root
+password=SENHA-BANCO-DE-DADOS
+```
+> Caso não queira utilizar mysql, apague os scripts 01-run-mysql.sh e 01-create-mysql-user.sh
+
+- Executar o script de instalação:
+```bash
+cd application
+bash ./install.sh
+```
 
 
 **Para cada container**:
-Executar o script novo_container.sh recebendo o usuário, senha, porta do code server e porta do ssh.
+Executar o script new_container.sh recebendo o usuário, senha, porta do code server e porta do ssh.
 
 Por exemplo:
 ```bash
-bash ./novo_container.sh joao 12345678 8080 22
+cd application
+bash ./new_container.sh joao 12345678 8080 22
 ```
 - Usuário: 'joao'
 - Senha: '12345678'

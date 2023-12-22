@@ -1,9 +1,10 @@
 services:
   user:
     image: "${USER_CONTAINER_IMAGE}"
-  #  runtime: sysbox-runc
+  # Padrão utilizar sysbox, pois caso contrário é limitado o número de containers que podem ser criados.
+    runtime: sysbox-runc
   # Se não estiver usando sysbox, comente a linha acima e descomente a linha abaixo.
-    privileged: true
+  #  privileged: true
 
     container_name: "${USERNAME}"
     volumes:
@@ -36,7 +37,7 @@ services:
           cpus: '1'
           memory: 2G
         reservations:
-          memory: 512M
+          memory: 1G
 
 volumes:
   vol-user:
