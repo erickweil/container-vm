@@ -6,9 +6,6 @@ export PASSWORD=$2
 export CODEPORT=$3
 export SSHPORT=$4
 
-export USER_CONTAINER_IMAGE="registry.fslab.dev/erickweil/container-vm:complete"
-export DOCKER_NETWORK="net-vm"
-
 echo "Criando arquivos de configuração"
 mkdir -p "./usuarios/$USERNAME"
 

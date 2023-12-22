@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e # Se falhar 1 comando falha tudo.
 
+source ./env.sh
+
 export USERNAME=$1
 export PASSWORD=$2
 export CODEPORT=$3

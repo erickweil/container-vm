@@ -6,7 +6,7 @@ Criar containers docker que funcionam quase idêntico à uma máquina virtual. C
 
 **Primeira vez**:
 - Editar o application/templates/docker-compose.yml e escolher se irá utilizar sysbox, e também para controlar a limitação de cpu e memória, bem como configurar outras variáveis de ambiente, portas, volumes, etc...
-- (Opcional) Editar o arquivo application/templates/.env.template e colocar a imagem docker desejada
+- (Opcional) Editar o arquivo application/env.sh e colocar as configurações desejadas
   - erickweil/container-vm:code (Padrão) - Possui apenas o code-server e utilitários básicos de terminal instalado
   - erickweil/container-vm:complete - Costruído a partir da imagem :code, docker, web server nginx com php ativado, servidor ssh, node, python, java, kubectl, cliente mysql
 - Se deseja utilizar o mysql, deve ter o cliente de terminal mysql instalado e o arquivo .my.cnf com a senha em $HOME/.my.cnf

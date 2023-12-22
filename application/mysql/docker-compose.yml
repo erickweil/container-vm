@@ -51,7 +51,7 @@ services:
 
 networks:
   net-mysql:
-    name: "${NETWORK}"
+    name: "${DOCKER_NETWORK}"
     external: true
 
 volumes:
