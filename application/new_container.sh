@@ -11,5 +11,5 @@ export SSHPORT=$4
 for script in on-new-container/*.sh
 do
   printf "Executing script: %s\n" "$script"
-  ./"$script" $USERNAME $PASSWORD $CODEPORT $SSHPORT
+  bash ./"$script" $USERNAME $PASSWORD $CODEPORT $SSHPORT
 done
