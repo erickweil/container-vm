@@ -134,13 +134,13 @@ test:
     - echo "Vendo se o container inicia"
     - docker rm -f containervm-joao || true
     - docker volume rm vol-containervm-joao || true
-    - cd ./docker-vm
     - docker network create net-vm || true
     # Não expor a porta
-    - sed -i -e "s/^.*ports:.*\$/# Não vai expor a porta/g" ./docker-vm/docker-compose.yml
-    - sed -i -e "s/^.*CODEPORT.*\$/# Não vai expor a porta/g" ./docker-vm/docker-compose.yml
-    - sed -i -e "s/^.*SSHPORT.*\$/# Não vai expor a porta/g" ./docker-vm/docker-compose.yml
-    - bash ./novo_container.sh containervm-joao 12345678 8080 22
+    - cd ./application
+    - sed -i -e "s/^.*ports:.*\$/# Não vai expor a porta/g" templates/docker-compose.yml
+    - sed -i -e "s/^.*CODEPORT.*\$/# Não vai expor a porta/g" templates/docker-compose.yml
+    - sed -i -e "s/^.*SSHPORT.*\$/# Não vai expor a porta/g" templates/docker-compose.yml
+    - bash ./new_container.sh containervm-joao 12345678 8080 22
     - sleep 10
     - docker ps -a
     - docker logs containervm-joao
