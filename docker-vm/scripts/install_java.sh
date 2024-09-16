@@ -4,7 +4,7 @@ if [[ ! $INSTALL_PROGRAMS == *"java"* ]]; then exit 0; fi;
 echo "Instalando Java"
 
 # https://www.linode.com/docs/guides/how-to-install-openjdk-ubuntu-22-04/
-wget https://download.java.net/java/GA/jdk20.0.2/6e380f22cbe7469fa75fb448bd903d8e/9/GPL/openjdk-20.0.2_linux-x64_bin.tar.gz
+wget https://download.java.net/java/GA/jdk22.0.2/c9ecb94cd31b495da20a27d4581645e8/9/GPL/openjdk-22.0.2_linux-x64_bin.tar.gz
 tar xvf openjdk-*.tar.gz -C /opt
 update-alternatives --install /usr/bin/java java /opt/jdk-*/bin/java 1000
 update-alternatives --install /usr/bin/javac javac /opt/jdk-*/bin/javac 1000

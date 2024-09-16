@@ -41,7 +41,9 @@ ENV INSTALL_HOME=/home/admin
 ENV VSCODE_EXTENSIONS_PATH=/opt/vscode-extensions
 
 # Instalar primeiro o code para ter cache nos layers pelo menos do code
-COPY scripts/install.sh \
+COPY scripts/docker-entrypoint.sh \
+	scripts/create_user.sh \
+	scripts/install.sh \
 	scripts/install_locale.sh \
 	scripts/install_code.sh \
 	configs/config.yaml \
